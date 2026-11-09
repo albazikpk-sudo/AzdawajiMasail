@@ -1,0 +1,49 @@
+
+name: Build Azdawaji Masail APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'AzdawajiApp-GitHub-Ready.zip'
+      - '.github/workflows/android-build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0'
+
+      - name: Set up Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Extract Android project ZIP
+        run: |
+          test -f AzdawajiApp-GitHub-Ready.zip
+          unzip -q AzdawajiApp-GitHub-Ready.zip -d .
+
+      - name: Build Debug APK
+        run: gradle -p AzdawajiApp --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Azdawaji-Masail-APK
+          path: AzdawajiApp/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
